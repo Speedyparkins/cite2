@@ -1,0 +1,2 @@
+<a href="{{ url_for('index') }}#rm_section">Мой РМ</a>
+<p>Депозит: {{ account.deposit }}, Риск на депозит в %: {{ account.risk_per_trade_pct }}, Риск на депозит в долларах: {{ account.risk_per_trade_dollars }}, Максимальное число позиций: {{ account.max_positions }}</p>
