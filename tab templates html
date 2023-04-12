@@ -1,0 +1,50 @@
+<table>
+  <tr>
+    <th>Trading pair</th>
+    <th>Stop loss in %</th>
+    <th>Stop loss in dollars</th>
+    <th>Take profit in %</th>
+    <th>Take profit in dollars</th>
+    <th>Volume</th>
+    <th>Risk/reward</th>
+    <th>Actions</th>
+  </tr>
+  {% for position in positions %}
+  <tr>
+    <td>{{ position.trading_pair }}</td>
+    <td>{{ position.stop_loss_pct * 100 }}%</td>
+    <td>{{ position.stop_loss_dollars }}</td>
+    <td>{{ position.take_profit_pct * 100 }}%</td>
+    <td>{{ position.take_profit_dollars }}</td>
+    <td>{{ position.volume }}</td>
+    <td>{{ position.risk_reward }}</td>
+    <td><a href="{{ url_for('delete_position', id=position.id) }}">Delete</a></td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <form method="POST" action="{{ url_for('add_position') }}">
+      <td>
+        <input type="text" name="trading_pair">
+      </td>
+      <td>
+        <input type="text" name="stop_loss_pct">
+      </td>
+      <td>
+        <input type="text" name="stop_loss_dollars">
+      </td>
+      <td>
+        <input type="text" name="take_profit_pct">
+      </td>
+      <td>
+        <input type="text" name="take_profit_dollars">
+      </td>
+      <td>
+        <input type="text" name="volume">
+      </td>
+      <td>
+        <button type="submit">Add position</button>
+      </td>
+    </form>
+    <td></td>
+  </tr>
+</table>
