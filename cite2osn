@@ -1,0 +1,59 @@
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trading.db'
+db = SQLAlchemy(app)
+
+class Position(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    trading_pair = db.Column(db.String(10))
+    stop_loss_pct = db.Column(db.Float)
+    stop_loss_dollars = db.Column(db.Float)
+    take_profit_pct = db.Column(db.Float)
+    take_profit_dollars = db.Column(db.Float)
+    volume = db.Column(db.Float)
+    risk_reward = db.Column(db.Float)
+
+class Account(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deposit = db.Column(db.Float)
+    max_positions = db.Column(db.Integer)
+    risk_per_trade_pct = db.Column(db.Float)
+    risk_per_trade_dollars = db.Column(db.Float)
+
+@app.route('/')
+def index():
+    positions = Position.query.all()
+    account = Account.query.first()
+    total_risk = account.deposit * (account.risk_per_trade_pct / 100)
+    used_risk = sum(position.risk_reward for position in positions)
+    free_risk = total_risk - used_risk
+    return render_template('index.html', positions=positions, account=account, free_risk=free_risk)
+
+@app.route('/add_position', methods=['POST'])
+def add_position():
+    trading_pair = request.form['trading_pair']
+    stop_loss_pct = float(request.form['stop_loss_pct']) / 100
+    stop_loss_dollars = float(request.form['stop_loss_dollars'])
+    take_profit_pct = float(request.form['take_profit_pct']) / 100
+    take_profit_dollars = float(request.form['take_profit_dollars'])
+    volume = float(request.form['volume'])
+    risk_reward = ((take_profit_dollars - stop_loss_dollars) / stop_loss_dollars) * volume
+    position = Position(trading_pair=trading_pair, stop_loss_pct=stop_loss_pct, stop_loss_dollars=stop_loss_dollars, take_profit_pct=take_profit_pct, take_profit_dollars=take_profit_dollars, volume=volume, risk_reward=risk_reward)
+    db.session.add(position)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/update_account', methods=['POST'])
+def update_account():
+    account = Account.query.first()
+    account.deposit = float(request.form['deposit'])
+    account.max_positions = int(request.form['max_positions'])
+    account.risk_per_trade_pct = float(request.form['risk_per_trade_pct'])
+    account.risk_per_trade_dollars = account.deposit * (account.risk_per_trade_pct / 100)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run()
